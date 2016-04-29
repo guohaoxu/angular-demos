@@ -1,23 +1,39 @@
 <!DOCTYPE html>
-<html>
+<html ng-app="myApp">
     <head>
         <meta charset="utf-8">
         <title>angular chat!</title>
         <link type="text/css" rel="stylesheet" href="/components/bootstrap/dist/css/bootstrap.css"></link>
+        <base href="/">
+        <style>
+            .messages{max-height: 400px; overflow-y: auto;}
+        </style>
+    </head>
+
+    <body>
+        <div class="navbar navbar-inverse navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#">chat</a>
+                </div>
+            </div>
+        </div>
+        <div class="container" style="margin-top:100px;">
+            <div class="row" ng-view></div>
+        </div>
+
         <script src="/socket.io/socket.io.js"></script>
         <script src="/components/jquery/dist/jquery.js"></script>
         <script src="/components/bootstrap/dist/js/bootstrap.js"></script>
         <script src="/components/angular/angular.js"></script>
-    </head>
-
-    <body>
-
-        <script>
-            var socket = io.connect('/');
-            socket.on('connected', function () {
-                alert('connected to chat..');
-            });
-        </script>
+        <script src="/components/angular-route/angular-route.js"></script>
+        <script src="/js/main.js"></script>
+        <script src="/js/router.js"></script>
+        <script src="/js/services/socket.js"></script>
+        <script src="/js/directives/auto-scroll-to-bottom.js"></script>
+        <script src="/js/directives/ctrl-enter-break-line.js"></script>
+        <script src="/js/controllers/room.js"></script>
+        <script src="/js/controllers/message-creator.js"></script>
 
     </body>
 

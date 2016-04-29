@@ -21,7 +21,7 @@ var express = require('express'),
     http = require('http').Server(app),
     io = require('socket.io')(http),
 
-    Message = require('./app/models/message.js')
+    Message = require('./app/models/user.js')
 
 
 app.set('port', process.env.PORT || 3000)
@@ -53,20 +53,21 @@ if ('development' === app.get('env')) {
 
 routes(app)
 
-io.on('connection', function (socket) {
-    socket.on('addMess', function(msg){
-        io.emit('backMess', msg)
-        var newMessage = new Message({
-            sayer: msg.sayer,
-            toer: msg.toer,
-            txt: msg.txt
-        })
-        newMessage.save(function (err, doc) {
-            console.log(doc)
-        })
-    })
+app.get("*", function (req, res) {
+    res.sendFile(path.join(__dirname + '/public/chat.html'))
 })
 
 http.listen(app.get('port'), function () {
     console.log('Server is running on ' + app.set('port'))
+})
+
+var messages = []
+io.on('connection', function (socket) {
+    socket.on('getAllMessages', function () {
+        socket.emit('allMessages', messages)
+    })
+    socket.on('createMessage', function (message) {
+        messages.push(message)
+        socket.emit('messageAdded', message)
+    })
 })

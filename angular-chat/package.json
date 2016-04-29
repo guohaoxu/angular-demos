@@ -9,6 +9,7 @@
   "license": "MIT",
   "main": "app.js",
   "dependencies": {
+    "async": "^2.0.0-rc.3",
     "body-parser": "^1.15.0",
     "compression": "^1.6.1",
     "cookie-parser": "^1.4.1",
