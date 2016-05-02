@@ -3,10 +3,11 @@
     <head>
         <meta charset="utf-8">
         <title>angular chat!</title>
-        <link type="text/css" rel="stylesheet" href="/components/bootstrap/dist/css/bootstrap.css"></link>
+        <link type="text/css" rel="stylesheet" href="/bootstrap/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="/css/main.css">
         <base href="/">
         <style>
-            .messages{max-height: 400px; overflow-y: auto;}
+
         </style>
     </head>
 
@@ -16,6 +17,17 @@
                 <div class="navbar-header">
                     <a class="navbar-brand" href="#">chat</a>
                 </div>
+                <div class="collapse navbar-collapse">
+                    <ul class="nav navbar-nav navbar-right nav-me" ng-show="me">
+                        <li>
+                            <img ng-src="{{me.avatarUrl}}" title="{{me.name}}" class="img-rounded wid35">
+                        </li>
+                        <li>{{me.name}}</li>
+                        <li>
+                            <a href="" ng-click="logout()">Log out</a>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
         <div class="container" style="margin-top:100px;">
@@ -23,17 +35,11 @@
         </div>
 
         <script src="/socket.io/socket.io.js"></script>
-        <script src="/components/jquery/dist/jquery.js"></script>
-        <script src="/components/bootstrap/dist/js/bootstrap.js"></script>
-        <script src="/components/angular/angular.js"></script>
-        <script src="/components/angular-route/angular-route.js"></script>
+        <script src="/js/lib/jquery.min.js"></script>
+        <script src="/bootstrap/js/bootstrap.min.js"></script>
+        <script src="/js/lib/angular.min.js"></script>
+        <script src="/js/lib/angular-route.min.js"></script>
         <script src="/js/main.js"></script>
-        <script src="/js/router.js"></script>
-        <script src="/js/services/socket.js"></script>
-        <script src="/js/directives/auto-scroll-to-bottom.js"></script>
-        <script src="/js/directives/ctrl-enter-break-line.js"></script>
-        <script src="/js/controllers/room.js"></script>
-        <script src="/js/controllers/message-creator.js"></script>
 
     </body>
 

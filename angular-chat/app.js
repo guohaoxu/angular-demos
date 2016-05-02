@@ -21,8 +21,12 @@ var express = require('express'),
     http = require('http').Server(app),
     io = require('socket.io')(http),
 
-    Message = require('./app/models/user.js')
+    MongoStore = require('connect-mongo')(session),
+    sessionStore = new MongoStore({
+        url: settings.dbUrl
+    }),
 
+    Message = require('./app/models/user.js')
 
 app.set('port', process.env.PORT || 3000)
 //app.set('views', path.join(__dirname, 'app/views'))
@@ -37,10 +41,11 @@ app.use(cookieParser())
 app.use(session({
     secret: settings.cookieSecret,
     cookie: {
-        maxAge: 1000 * 60 * 60 * 24 * 30
+        maxAge: 1000 * 60
     },
-    resave: false,
-    saveUninitialized: true
+    resave: true,
+    saveUninitialized: false,
+    store: sessionStore
 }))
 app.use(compression())
 //app.use(favicon(path.join(__dirname, 'public/images/favicon.ico')))
@@ -51,6 +56,9 @@ if ('development' === app.get('env')) {
     app.use(errorHandler())
 }
 
+//app.get('/', function (req, res) {
+//    res.sendFile(path.join(__dirname + '/public/chat.html'))
+//})
 routes(app)
 
 app.get("*", function (req, res) {
@@ -66,8 +74,19 @@ io.on('connection', function (socket) {
     socket.on('getAllMessages', function () {
         socket.emit('allMessages', messages)
     })
-    socket.on('createMessage', function (message) {
+    socket.on('messages.create', function (message) {
         messages.push(message)
         socket.emit('messageAdded', message)
     })
+
+    socket.on("getRoom", function () {
+
+    })
 })
+
+
+
+
+
+
+

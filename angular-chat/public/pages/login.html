@@ -1,8 +1,8 @@
 <div class="col-sm-6 col-sm-offset-3">
-    <form class="form-inline">
+    <form class="form-inline" ng-submit="login()">
         <div class="form-group">
             <label class="sr-only">Email</label>
-            <input type="email" required class="form-control" placeholder="Mail Account">
+            <input type="email" required class="form-control" placeholder="Mail Account" ng-model="email">
         </div>
         <button type="submit" class="btn btn-primary btn-enter">Enter</button>
     </form>

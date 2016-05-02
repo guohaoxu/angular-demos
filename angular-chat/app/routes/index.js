@@ -3,10 +3,6 @@ var User = require('../models/user.js'),
 
 module.exports = function (app) {
 
-    app.get('/', function (req, res) {
-        res.sendFile(path.join(__dirname + '../../../public/chat.html'))
-    })
-
     app.get('/api/validate', function (req, res) {
         var _userId = req.session._userId
         if (_userId) {
@@ -16,7 +12,7 @@ module.exports = function (app) {
                         msg: err
                     })
                 } else {
-                    res.join(user)
+                    res.json(user)
                 }
             })
         } else {
@@ -33,8 +29,29 @@ module.exports = function (app) {
                         msg: err
                     })
                 } else {
-                    req.session._userId = user._id
-                    res.json(user)
+                    if (user) {
+                        req.session._userId = user._id
+                        User.online(user._id, function (err, user) {
+                            if (err) {
+                                res.json(500, {
+                                    msg: err
+                                })
+                            } else {
+                                res.json(user)
+                            }
+                        })
+                    } else {
+                        var newUser = new User({
+                            email: email,
+                            name: email.split('@')[0],
+                            online: true
+                        })
+                        newUser.save(function (err, user) {
+                            req.session._userId = user._id
+                            res.json(user)
+                        })
+                    }
+
                 }
             })
         } else {
