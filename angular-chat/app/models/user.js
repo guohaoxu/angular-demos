@@ -44,6 +44,11 @@ userSchema.statics.offline = function (_userId, cb) {
         online: false
     }, null, cb)
 }
+userSchema.statics.getOnlineUsers = function (cb) {
+    this.find({
+        online: true
+    }, cb)
+}
 
 var User = mongoose.model('User', userSchema)
 

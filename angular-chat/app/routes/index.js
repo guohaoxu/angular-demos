@@ -60,8 +60,18 @@ module.exports = function (app) {
     })
 
     app.get('/api/logout', function (req, res) {
-        req.session._userId = null
-        res.json(401)
+        _userId = req.session._userId
+        User.offline(_userId, function (err, user) {
+            if (err) {
+                res.json(500, {
+                    msg: err
+                })
+            } else {
+                req.session._userId = null
+                res.json(401)
+            }
+        })
+
     })
 
 }

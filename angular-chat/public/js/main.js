@@ -91,21 +91,18 @@ angular.module("myApp", ["ngRoute"]).run(function ($window, $rootScope, $http, $
         });
     }
 }).controller("RoomCtrl", function ($scope, socket) {
-//    $scope.messages = [];
-//
-//    socket.emit("getAllMessages");
-//    socket.on("allMessages", function (messages) {
-//        $scope.messages = messages;
-//    });
-
+    socket.on('start', function (msg) {
+        console.log(msg);
+    })
     socket.on("messageAdded", function (message) {
-        $scope.chat.messages.push(message);
+        console.log("来新消息了。。。")
+        $scope.room.messages.push(message);
     });
 
+    socket.emit("getRoom");
     socket.on("roomData", function (room) {
         $scope.room = room;
     });
-    socket.emit("getRoom");
 
 }).controller("MessageCreatorCtrl", function ($scope, socket) {
     $scope.newMessage = "";
@@ -114,7 +111,7 @@ angular.module("myApp", ["ngRoute"]).run(function ($window, $rootScope, $http, $
             return;
         }
         socket.emit("messages.create", {
-            message: $scope.newMessage,
+            content: $scope.newMessage,
             creator: $scope.me
         });
         $scope.newMessage = "";

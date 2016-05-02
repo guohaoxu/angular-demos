@@ -26,7 +26,7 @@ var express = require('express'),
         url: settings.dbUrl
     }),
 
-    Message = require('./app/models/user.js')
+    User = require('./app/models/user.js')
 
 app.set('port', process.env.PORT || 3000)
 //app.set('views', path.join(__dirname, 'app/views'))
@@ -41,7 +41,7 @@ app.use(cookieParser())
 app.use(session({
     secret: settings.cookieSecret,
     cookie: {
-        maxAge: 1000 * 60
+        maxAge: 1000 * 60 * 10
     },
     resave: true,
     saveUninitialized: false,
@@ -71,17 +71,31 @@ http.listen(app.get('port'), function () {
 
 var messages = []
 io.on('connection', function (socket) {
+    socket.emit('start', 'haha')
     socket.on('getAllMessages', function () {
         socket.emit('allMessages', messages)
     })
     socket.on('messages.create', function (message) {
         messages.push(message)
         socket.emit('messageAdded', message)
+        console.log('messageAdded.....................')
     })
 
     socket.on("getRoom", function () {
-
+        User.getOnlineUsers(function (err, users) {
+            if (err) {
+                socket.emit('err', {
+                    msg: err
+                })
+            } else {
+                socket.emit('roomData', {
+                    users: users,
+                    messages: messages
+                })
+            }
+        })
     })
+
 })
 
 
