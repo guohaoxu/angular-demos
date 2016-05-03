@@ -26,7 +26,8 @@ var express = require('express'),
         url: settings.dbUrl
     }),
 
-    User = require('./app/models/user.js')
+    User = require('./app/models/user.js'),
+    Message = require('./app/models/message.js')
 
 app.set('port', process.env.PORT || 3000)
 //app.set('views', path.join(__dirname, 'app/views'))
@@ -71,29 +72,84 @@ http.listen(app.get('port'), function () {
 
 var messages = []
 io.on('connection', function (socket) {
-    socket.emit('start', 'haha')
-    socket.on('getAllMessages', function () {
-        socket.emit('allMessages', messages)
-    })
-    socket.on('messages.create', function (message) {
-        messages.push(message)
-        socket.emit('messageAdded', message)
-        console.log('messageAdded.....................')
-    })
-
-    socket.on("getRoom", function () {
-        User.getOnlineUsers(function (err, users) {
+    var SYSTEM = {
+        name: 'SYSTEM'
+    }
+    socket.on("getRoom", function (user) {
+        socket.user = user
+        User.online(user._id, function (err, user) {
             if (err) {
-                socket.emit('err', {
+                socket.emit('error', {
                     msg: err
                 })
             } else {
-                socket.emit('roomData', {
-                    users: users,
-                    messages: messages
+                socket.broadcast.emit('online', user)
+                socket.broadcast.emit('messageAdded', {
+                    content: user.name + '进入了聊天室',
+                    creator: SYSTEM,
+                    createAt: new Date()
+                })
+            }
+            User.getOnlineUsers(function (err, users) {
+                if (err) {
+                    socket.emit('error', {
+                        msg: err
+                    })
+                } else {
+                    Message.read(function (err, messages) {
+                        if (err) {
+                            socket.emit('error', {
+                                msg: err
+                            })
+                        } else {
+                            socket.emit('roomData', {
+                                users: users,
+                                messages: messages
+                            })
+                        }
+                    })
+
+                }
+            })
+        })
+    })
+    socket.on('createMessage', function (message) {
+        var newMessage = new Message({
+            content: message.content,
+            creator: message.creator
+        })
+        newMessage.save(function (err, message) {
+            if (err) {
+                socket.emit('error', {
+                    msg: err
+                })
+            } else {
+                io.emit('messageAdded', message)
+            }
+        })
+    })
+    socket.on('disconnect', function () {
+        if (!socket.user) {
+            return
+        }
+        User.offline(socket.user._id, function (err, user) {
+            if (err) {
+                socket.emit('error', {
+                    msg: err
+                })
+            } else {
+                socket.broadcast.emit('offline', user)
+                socket.broadcast.emit('messageAdded', {
+                    content: user.name + '离开了聊天室',
+                    creator: SYSTEM,
+                    createAt: new Date()
                 })
             }
         })
+    })
+
+    socket.on('error', function (msg) {
+        console.log(msg)
     })
 
 })

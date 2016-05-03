@@ -1,4 +1,5 @@
-angular.module("myApp", ["ngRoute"]).run(function ($window, $rootScope, $http, $location) {
+angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $rootScope, $http, $location) {
+    $window.moment.locale("zh-cn");
     $http({
         url: "/api/validate",
         method: "GET"
@@ -63,7 +64,7 @@ angular.module("myApp", ["ngRoute"]).run(function ($window, $rootScope, $http, $
                 function () {
                     element.animate({
                         scrollTop: element.prop("scrollHeight")
-                    }, 1000);
+                    }, 100);
                 }
             );
         }
@@ -91,18 +92,34 @@ angular.module("myApp", ["ngRoute"]).run(function ($window, $rootScope, $http, $
         });
     }
 }).controller("RoomCtrl", function ($scope, socket) {
-    socket.on('start', function (msg) {
-        console.log(msg);
-    })
-    socket.on("messageAdded", function (message) {
-        console.log("来新消息了。。。")
-        $scope.room.messages.push(message);
-    });
-
-    socket.emit("getRoom");
+    console.log($scope.me);
+    socket.emit("getRoom", $scope.me);
     socket.on("roomData", function (room) {
         $scope.room = room;
     });
+    socket.on("messageAdded", function (message) {
+        $scope.room.messages.push(message);
+    });
+    socket.on("online", function (user) {
+        var _userId = user._id;
+        if ($scope.room.users.some(function (user, index) {
+            if (user._id === _userId) {
+                return true;
+            }
+        })) {
+            return;
+        }
+        $scope.room.users.push(user);
+    });
+    socket.on("offline", function (user) {
+        var _userId = user._id;
+        $scope.room.users = $scope.room.users.filter(function (user) {
+            return user._id !== _userId
+        })
+    })
+    socket.on("error", function (data) {
+        console.error(data);
+    })
 
 }).controller("MessageCreatorCtrl", function ($scope, socket) {
     $scope.newMessage = "";
@@ -110,7 +127,7 @@ angular.module("myApp", ["ngRoute"]).run(function ($window, $rootScope, $http, $
         if ($scope.newMessage === "") {
             return;
         }
-        socket.emit("messages.create", {
+        socket.emit("createMessage", {
             content: $scope.newMessage,
             creator: $scope.me
         });
