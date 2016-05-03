@@ -27,7 +27,8 @@ var express = require('express'),
     }),
 
     User = require('./app/models/user.js'),
-    Message = require('./app/models/message.js')
+    Message = require('./app/models/message.js'),
+    Room = require('./app/models/room.js')
 
 app.set('port', process.env.PORT || 3000)
 //app.set('views', path.join(__dirname, 'app/views'))
@@ -148,8 +149,32 @@ io.on('connection', function (socket) {
         })
     })
 
+    socket.on('createRoom', function (room) {
+        var newRoom = new Room(room)
+        newRoom.save(function (err, room) {
+            if (err) {
+                socket.emit('error', {
+                    msg: err
+                })
+            } else {
+                io.emit('roomAdded', room)
+            }
+        })
+    })
+    socket.on('getAllRooms', function () {
+        Room.read(function (err, rooms) {
+            if (err) {
+                socket.emit('error', {
+                    msg: err
+                })
+            } else {
+                socket.emit('roomsData', rooms)
+            }
+        })
+    })
+
     socket.on('error', function (msg) {
-        console.log(msg)
+        console.log('cao...')
     })
 
 })

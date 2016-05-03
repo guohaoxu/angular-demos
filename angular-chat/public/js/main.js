@@ -5,7 +5,7 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
         method: "GET"
     }).success(function (user) {
         $rootScope.me = user;
-        $location.path("/");
+        $location.path("/rooms");
     }).error(function (data) {
         $location.path("/login");
     });
@@ -23,8 +23,11 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
     })
 }).config(function ($routeProvider, $locationProvider) {
     $locationProvider.html5Mode(true);
-    $routeProvider.when("/", {
-        templateUrl: "/pages/room.html",
+    $routeProvider.when("/rooms", {
+        templateUrl: "/pages/rooms.html",
+        controller: "RoomsCtrl"
+    }).when("/rooms/:_roomId", {
+        remplateUrl: "/pages/room.html",
         controller: "RoomCtrl"
     }).when("/login", {
         templateUrl: "/pages/login.html",
@@ -91,6 +94,34 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
             }
         });
     }
+}).controller("RoomsCtrl", function ($scope, socket) {
+    socket.emit("getAllRooms");
+    socket.on("roomsData", function (rooms) {
+        console.log(rooms);
+        $scope.rooms = $scope._rooms = rooms
+    });
+    $scope.searchRoom = function () {
+        if ($scope.searchKey) {
+            $scope.rooms = $scope._rooms.filter(function (room) {
+                return room.name.indexOf($scope.searchKey) > -1
+            });
+        } else {
+            $scope.rooms = $scope._rooms;
+        }
+    };
+    $scope.createRoom = function () {
+        socket.emit("createRoom", {
+            name: $scope.searchKey
+        });
+    };
+    socket.on("roomAdded", function (room) {
+        $scope._rooms.push(room);
+        $scope.searchRoom();
+    });
+    socket.on("error", function (msg) {
+        console.log(msg);
+    });
+
 }).controller("RoomCtrl", function ($scope, socket) {
     console.log($scope.me);
     socket.emit("getRoom", $scope.me);
@@ -118,7 +149,7 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
         })
     })
     socket.on("error", function (data) {
-        console.error(data);
+        console.log(data);
     })
 
 }).controller("MessageCreatorCtrl", function ($scope, socket) {
@@ -143,7 +174,7 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
             }
         }).success(function (user) {
             $scope.$emit("login", user);
-            $location.path("/");
+            $location.path("/rooms");
         }).error(function (data) {
             $location.path("/login");
         });

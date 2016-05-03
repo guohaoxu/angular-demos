@@ -1,6 +1,7 @@
 var mongoose = require('mongoose'),
     settings = require('../settings.js'),
-    async = require("async")
+    async = require("async"),
+    ObjectId = mongoose.Schema.ObjectId
 
 mongoose.connect(settings.dbUrl)
 
@@ -11,6 +12,7 @@ var userSchema = new mongoose.Schema({
         type: String,
         default: "/imgs/tx.jpg"
     },
+    _roomId: ObjectId,
     online: Boolean
 })
 
