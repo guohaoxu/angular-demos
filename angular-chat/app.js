@@ -74,7 +74,8 @@ http.listen(app.get('port'), function () {
 var messages = []
 io.on('connection', function (socket) {
     var SYSTEM = {
-        name: 'SYSTEM'
+        name: 'SYSTEM',
+        avatarUrl: '/imgs/tx.jpg'
     }
     socket.on("getRoom", function (user) {
         socket.user = user
@@ -169,6 +170,24 @@ io.on('connection', function (socket) {
                 })
             } else {
                 socket.emit('roomsData', rooms)
+            }
+        })
+    })
+    socket.on('joinRoom', function (join) {
+        User.joinRoom(join, function (err, user) {
+            if (err) {
+                socket.emit('error', {
+                    msg: error
+                })
+            } else {
+                socket.join(join.room._id)
+                socket.emit('joinRoom.' + join.user._id, join)
+                socket.in(join.room._id).broadcast.emit('messageAdded', {
+                    content: join.user.name + '进入了聊天室',
+                    creator: SYSTEM,
+                    createAt: new Date()
+                })
+                socket.in(join.room._id).broadcast.emit('joinRoom', join)
             }
         })
     })

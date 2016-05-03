@@ -37,18 +37,26 @@ userSchema.statics.online = function (_userId, cb) {
         _id: _userId
     }, {
         online: true
-    }, null, cb)
+    }, cb)
 }
 userSchema.statics.offline = function (_userId, cb) {
     this.findOneAndUpdate({
         _id: _userId
     }, {
         online: false
-    }, null, cb)
+    }, cb)
 }
 userSchema.statics.getOnlineUsers = function (cb) {
     this.find({
         online: true
+    }, cb)
+}
+userSchema.statics.joinRoom = function (join, cb) {
+    this.findOneAndUpdate({
+        _id: join.user._id
+    }, {
+        online: true,
+        _roomId: join.room._id
     }, cb)
 }
 

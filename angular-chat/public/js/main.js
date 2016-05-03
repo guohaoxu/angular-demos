@@ -118,19 +118,41 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
         $scope._rooms.push(room);
         $scope.searchRoom();
     });
+    $scope.enterRoom = function (room) {
+        socket.emit("joinRoom", {
+            user: $scope.me,
+            room: room
+        });
+    };
+    socket.once("joinRoom." + $scope.me._id, function (join) {
+        $location.path("/rooms/" + join.room._id);
+    });
+    socket.on("joinRoom", function (join) {
+        $scope.rooms.forEach(function (room) {
+            if (room._id == join.room._id) {
+                room.users.push(join.user);
+            }
+        })
+    })
+
+
     socket.on("error", function (msg) {
         console.log(msg);
     });
 
-}).controller("RoomCtrl", function ($scope, socket) {
-    console.log($scope.me);
-    socket.emit("getRoom", $scope.me);
-    socket.on("roomData", function (room) {
+}).controller("RoomCtrl", function ($scope, socket, $routeParams) {
+    socket.emit("getRoom", {
+        _roomId: $routeParams._roomId
+    });
+    socket.on("roomData." + $routeParams._roomId, function (room) {
         $scope.room = room;
     });
     socket.on("messageAdded", function (message) {
         $scope.room.messages.push(message);
     });
+    socket.on("joinRoom", function (join) {
+        $scope.room.users.push(join.user);
+    })
     socket.on("online", function (user) {
         var _userId = user._id;
         if ($scope.room.users.some(function (user, index) {
