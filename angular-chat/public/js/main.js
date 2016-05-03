@@ -94,7 +94,8 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
             }
         });
     }
-}).controller("RoomsCtrl", function ($scope, socket) {
+}).controller("RoomsCtrl", function ($scope, socket, $location) {
+    //console.log($scope.me);
     socket.emit("getAllRooms");
     socket.on("roomsData", function (rooms) {
         console.log(rooms);
@@ -124,7 +125,7 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
             room: room
         });
     };
-    socket.once("joinRoom." + $scope.me._id, function (join) {
+    socket.on("joinRoom." + $scope.me._id, function (join) {
         $location.path("/rooms/" + join.room._id);
     });
     socket.on("joinRoom", function (join) {

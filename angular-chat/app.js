@@ -77,7 +77,7 @@ io.on('connection', function (socket) {
         name: 'SYSTEM',
         avatarUrl: '/imgs/tx.jpg'
     }
-    socket.on("getRoom", function (user) {
+    socket.on("getRoom", function (_roomId) {
         socket.user = user
         User.online(user._id, function (err, user) {
             if (err) {
