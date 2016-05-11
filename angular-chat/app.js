@@ -162,16 +162,28 @@ io.on('connection', function (socket) {
             }
         })
     })
-    socket.on('getAllRooms', function () {
-        Room.read(function (err, rooms) {
-            if (err) {
-                socket.emit('error', {
-                    msg: err
-                })
-            } else {
-                socket.emit('roomsData', rooms)
-            }
-        })
+    socket.on('getAllRooms', function (data) {
+        if (data && data._roomId) {
+            Room.findById(data._roomId, function (err, room) {
+                if (err) {
+                    socket.emit('error', {
+                        msg: err
+                    })
+                } else {
+                    socket.emit('roomData.' + data._roomId, room)
+                }
+            })
+        } else {
+            Room.read(function (err, rooms) {
+                if (err) {
+                    socket.emit('error', {
+                        msg: err
+                    })
+                } else {
+                    socket.emit('roomsData', rooms)
+                }
+            })
+        }
     })
     socket.on('joinRoom', function (join) {
         User.joinRoom(join, function (err, user) {
@@ -182,6 +194,7 @@ io.on('connection', function (socket) {
             } else {
                 socket.join(join.room._id)
                 socket.emit('joinRoom.' + join.user._id, join)
+                socket.emit('joinRoom', join)
                 socket.in(join.room._id).broadcast.emit('messageAdded', {
                     content: join.user.name + '进入了聊天室',
                     creator: SYSTEM,

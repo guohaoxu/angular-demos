@@ -95,10 +95,8 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
         });
     }
 }).controller("RoomsCtrl", function ($scope, socket, $location) {
-    //console.log($scope.me);
     socket.emit("getAllRooms");
     socket.on("roomsData", function (rooms) {
-        console.log(rooms);
         $scope.rooms = $scope._rooms = rooms
     });
     $scope.searchRoom = function () {
@@ -127,10 +125,12 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
     };
     socket.on("joinRoom." + $scope.me._id, function (join) {
         $location.path("/rooms/" + join.room._id);
+        console.log("You just click enterRoom ")
     });
     socket.on("joinRoom", function (join) {
         $scope.rooms.forEach(function (room) {
             if (room._id == join.room._id) {
+                console.log(room);
                 room.users.push(join.user);
             }
         })
@@ -142,7 +142,7 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
     });
 
 }).controller("RoomCtrl", function ($scope, socket, $routeParams) {
-    socket.emit("getRoom", {
+    socket.emit("getAllRooms", {
         _roomId: $routeParams._roomId
     });
     socket.on("roomData." + $routeParams._roomId, function (room) {
@@ -154,23 +154,23 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
     socket.on("joinRoom", function (join) {
         $scope.room.users.push(join.user);
     })
-    socket.on("online", function (user) {
-        var _userId = user._id;
-        if ($scope.room.users.some(function (user, index) {
-            if (user._id === _userId) {
-                return true;
-            }
-        })) {
-            return;
-        }
-        $scope.room.users.push(user);
-    });
-    socket.on("offline", function (user) {
-        var _userId = user._id;
-        $scope.room.users = $scope.room.users.filter(function (user) {
-            return user._id !== _userId
-        })
-    })
+//    socket.on("online", function (user) {
+//        var _userId = user._id;
+//        if ($scope.room.users.some(function (user, index) {
+//            if (user._id === _userId) {
+//                return true;
+//            }
+//        })) {
+//            return;
+//        }
+//        $scope.room.users.push(user);
+//    });
+//    socket.on("offline", function (user) {
+//        var _userId = user._id;
+//        $scope.room.users = $scope.room.users.filter(function (user) {
+//            return user._id !== _userId
+//        })
+//    })
     socket.on("error", function (data) {
         console.log(data);
     })
