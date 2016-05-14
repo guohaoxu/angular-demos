@@ -125,7 +125,8 @@ io.on('connection', function (socket) {
                     msg: err
                 })
             } else {
-                io.emit('messageAdded', message)
+                socket.in(message._roomId).broadcast.emit('messageAdded', message)
+                socket.emit('messageAdded', message)
             }
         })
     })
@@ -161,8 +162,8 @@ io.on('connection', function (socket) {
             }
         })
     })
-    socket.on('getAllRooms', function (data) {
-        if (data && data._roomId) {
+    socket.on('getCurRoom', function (data) {
+        if (data && data.roomId) {
             Room.findById(data._roomId, function (err, room) {
                 if (err) {
                     socket.emit('error', {

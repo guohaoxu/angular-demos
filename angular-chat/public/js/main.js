@@ -4,8 +4,8 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
         url: "/api/validate",
         method: "GET"
     }).success(function (user) {
-        $rootScope.me = user;
-        $location.path("/rooms");
+        //$rootScope.me = user;
+        //$location.path("/rooms");
     }).error(function (data) {
         $location.path("/login");
     });
@@ -23,11 +23,12 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
     })
 }).config(function ($routeProvider, $locationProvider) {
     $locationProvider.html5Mode(true);
+
     $routeProvider.when("/rooms", {
         templateUrl: "/pages/rooms.html",
         controller: "RoomsCtrl"
-    }).when("/rooms/:_roomId", {
-        remplateUrl: "/pages/room.html",
+    }).when("/rooms/:roomId", {
+        templateUrl: "/pages/room.html",
         controller: "RoomCtrl"
     }).when("/login", {
         templateUrl: "/pages/login.html",
@@ -125,16 +126,16 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
     };
     socket.on("joinRoom." + $scope.me._id, function (join) {
         $location.path("/rooms/" + join.room._id);
-        console.log("You just click enterRoom ")
     });
     socket.on("joinRoom", function (join) {
-        $scope.rooms.forEach(function (room) {
-            if (room._id == join.room._id) {
-                console.log(room);
-                room.users.push(join.user);
-            }
-        })
-    })
+//        $scope.rooms.forEach(function (room) {
+//            if (room._id == join.room._id) {
+//
+//                console.log(room);
+//                room.users.push(join.user);
+//            }
+//        });
+    });
 
 
     socket.on("error", function (msg) {
@@ -142,35 +143,39 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
     });
 
 }).controller("RoomCtrl", function ($scope, socket, $routeParams) {
-    socket.emit("getAllRooms", {
-        _roomId: $routeParams._roomId
+    console.log("route: " + $routeParams.roomId);
+
+    //获取当前房间信息 room.name  room.users  room.messages
+    socket.emit("getCurRoom", {
+        roomId: $routeParams.roomId
     });
-    socket.on("roomData." + $routeParams._roomId, function (room) {
+    socket.on("curRoomData." + $routeParams.roomId, function (room) {
         $scope.room = room;
     });
+
     socket.on("messageAdded", function (message) {
         $scope.room.messages.push(message);
     });
     socket.on("joinRoom", function (join) {
         $scope.room.users.push(join.user);
     })
-//    socket.on("online", function (user) {
-//        var _userId = user._id;
-//        if ($scope.room.users.some(function (user, index) {
-//            if (user._id === _userId) {
-//                return true;
-//            }
-//        })) {
-//            return;
-//        }
-//        $scope.room.users.push(user);
-//    });
-//    socket.on("offline", function (user) {
-//        var _userId = user._id;
-//        $scope.room.users = $scope.room.users.filter(function (user) {
-//            return user._id !== _userId
-//        })
-//    })
+    socket.on("online", function (user) {
+        var _userId = user._id;
+        if ($scope.room.users.some(function (user, index) {
+            if (user._id === _userId) {
+                return true;
+            }
+        })) {
+            return;
+        }
+        $scope.room.users.push(user);
+    });
+    socket.on("offline", function (user) {
+        var _userId = user._id;
+        $scope.room.users = $scope.room.users.filter(function (user) {
+            return user._id !== _userId
+        })
+    })
     socket.on("error", function (data) {
         console.log(data);
     })
@@ -183,7 +188,8 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
         }
         socket.emit("createMessage", {
             content: $scope.newMessage,
-            creator: $scope.me
+            creator: $scope.me,
+            _roomId: $scope.room._id
         });
         $scope.newMessage = "";
     }
