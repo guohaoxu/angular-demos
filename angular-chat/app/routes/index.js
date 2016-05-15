@@ -22,7 +22,7 @@ module.exports = function (app) {
         } else {
             res.json({
                 code: 0,
-                msg: err
+                msg: '未登录'
             })
         }
     })

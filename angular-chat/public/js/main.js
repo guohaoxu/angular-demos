@@ -102,7 +102,6 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
     //房间列表页，接收房间信息 rooms {rooms, usersLen}
     socket.emit("getRooms");
     socket.on("roomsData", function (data) {
-        console.log(data);
         $scope.rooms = $scope._rooms = data.rooms;
         $scope.rooms.forEach(function (room, index) {
             room.length = data.usersLen[index]
@@ -136,20 +135,17 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
             room: room
         });
     };
+
     socket.on("joinRoom." + $scope.me._id, function (join) {
         $location.path("/rooms/" + join.room._id);
     });
-
-    //别人进入房间 跟新rooms
-    socket.on("joinRoom", function (join) {
+//    socket.on("joinRoom", function (join) {
 //        $scope.rooms.forEach(function (room) {
 //            if (room._id == join.room._id) {
-//
-//                console.log(room);
-//                room.users.push(join.user);
+//                room.length++;
 //            }
 //        });
-    });
+//    });
 
     socket.on("error", function (msg) {
         console.log(msg);
@@ -169,31 +165,31 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
         $scope.roomData.messages.push(message);
     });
     socket.on("joinRoom", function (join) {
+        console.log($scope.roomData);
         $scope.roomData.users.push(join.user);
     })
-    socket.on("online", function (user) {
-        var _userId = user._id;
-        if ($scope.room.users.some(function (user, index) {
-            if (user._id === _userId) {
-                return true;
-            }
-        })) {
-            return;
-        }
-        $scope.room.users.push(user);
-    });
-    socket.on("offline", function (user) {
-        var _userId = user._id;
-        $scope.room.users = $scope.room.users.filter(function (user) {
-            return user._id !== _userId
-        })
-    })
+//    socket.on("online", function (user) {
+//        var _userId = user._id;
+//        if ($scope.room.users.some(function (user, index) {
+//            if (user._id === _userId) {
+//                return true;
+//            }
+//        })) {
+//            return;
+//        }
+//        $scope.room.users.push(user);
+//    });
+//    socket.on("offline", function (user) {
+//        var _userId = user._id;
+//        $scope.room.users = $scope.room.users.filter(function (user) {
+//            return user._id !== _userId
+//        })
+//    })
     socket.on("error", function (data) {
         console.log(data);
     })
 
 }).controller("MessageCreatorCtrl", function ($scope, socket) {
-    console.log($scope.me)
     $scope.newMessage = "";
     $scope.createMessage = function () {
         if ($scope.newMessage === "") {

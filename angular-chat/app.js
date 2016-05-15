@@ -170,12 +170,12 @@ io.on('connection', function (socket) {
                 socket.join(join.room._id)
                 socket.emit('joinRoom.' + join.user._id, join)
                 socket.emit('joinRoom', join)
+                socket.in(join.room._id).broadcast.emit('joinRoom', join)
                 socket.in(join.room._id).broadcast.emit('messageAdded', {
                     content: join.user.name + '进入了聊天室',
                     creator: SYSTEM,
                     createAt: new Date()
                 })
-                socket.in(join.room._id).broadcast.emit('joinRoom', join)
             }
         })
     })
