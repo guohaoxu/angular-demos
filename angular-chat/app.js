@@ -43,7 +43,7 @@ app.use(cookieParser())
 app.use(session({
     secret: settings.cookieSecret,
     cookie: {
-        maxAge: 1000 * 60 * 10
+        maxAge: 1000 * 60 * 30
     },
     resave: true,
     saveUninitialized: false,
@@ -77,60 +77,77 @@ io.on('connection', function (socket) {
         name: 'SYSTEM',
         avatarUrl: '/imgs/tx.jpg'
     }
-    socket.on("getRoom", function (_roomId) {
-        socket.user = user
-        User.online(user._id, function (err, user) {
+//    socket.on("getRoom", function (_roomId) {
+//        socket.user = user
+//        User.online(user._id, function (err, user) {
+//            if (err) {
+//                socket.emit('error', {
+//                    msg: err
+//                })
+//            } else {
+//                socket.broadcast.emit('online', user)
+//                socket.broadcast.emit('messageAdded', {
+//                    content: user.name + '进入了聊天室',
+//                    creator: SYSTEM,
+//                    createAt: new Date()
+//                })
+//            }
+//            User.getOnlineUsers(function (err, users) {
+//                if (err) {
+//                    socket.emit('error', {
+//                        msg: err
+//                    })
+//                } else {
+//                    Message.read(function (err, messages) {
+//                        if (err) {
+//                            socket.emit('error', {
+//                                msg: err
+//                            })
+//                        } else {
+//                            socket.emit('roomData', {
+//                                users: users,
+//                                messages: messages
+//                            })
+//                        }
+//                    })
+//                }
+//            })
+//        })
+//    })
+
+
+    socket.on('getRooms', function () {
+        var _usersLen = []
+        Room.read(function (err, rooms) {
             if (err) {
                 socket.emit('error', {
                     msg: err
                 })
             } else {
-                socket.broadcast.emit('online', user)
-                socket.broadcast.emit('messageAdded', {
-                    content: user.name + '进入了聊天室',
-                    creator: SYSTEM,
-                    createAt: new Date()
-                })
-            }
-            User.getOnlineUsers(function (err, users) {
-                if (err) {
-                    socket.emit('error', {
-                        msg: err
+                if (rooms.length === 0) {
+                    return socket.emit('roomsData', {
+                        rooms: rooms,
+                        usersLen: _usersLen
                     })
-                } else {
-                    Message.read(function (err, messages) {
-                        if (err) {
-                            socket.emit('error', {
-                                msg: err
-                            })
-                        } else {
-                            socket.emit('roomData', {
-                                users: users,
-                                messages: messages
+                }
+                var len = 0
+                rooms.forEach(function (room) {
+                    User.find({
+                        _roomId: room._id
+                    }, function (err, users) {
+                        _usersLen.push(users.length)
+                        len++
+                        if (len === rooms.length) {
+                            socket.emit('roomsData', {
+                                rooms: rooms,
+                                usersLen: _usersLen
                             })
                         }
                     })
-                }
-            })
-        })
-    })
-    socket.on('createMessage', function (message) {
-        var newMessage = new Message({
-            content: message.content,
-            creator: message.creator
-        })
-        newMessage.save(function (err, message) {
-            if (err) {
-                socket.emit('error', {
-                    msg: err
                 })
-            } else {
-                socket.in(message._roomId).broadcast.emit('messageAdded', message)
-                socket.emit('messageAdded', message)
             }
         })
     })
-
     socket.on('createRoom', function (room) {
         var newRoom = new Room(room)
         newRoom.save(function (err, room) {
@@ -163,43 +180,54 @@ io.on('connection', function (socket) {
         })
     })
     socket.on('getCurRoom', function (data) {
-        Room.findById(data._roomId, function (err, room) {
+        var _users = [],
+            _messages = []
+        Room.findById(data.roomId, function (err, room) {
             if (err) {
                 socket.emit('error', {
                     msg: err
                 })
             } else {
-                console.log(util.inspect(room))
                 User.find({
                     _roomId: room._id
                 }, function (err, users) {
                     if (err) return
-                    room.users = users
+                    _users = users
                     Message.find({
                         _roomId: room._id
                     }, function (err, messages) {
                         if (err) return
-                        room.messages = messages
-                        socket.emit('curRoomData', room)
+                        _messages = messages
+                        socket.emit('curRoomData', {
+                            room: room,
+                            users: _users,
+                            messages: _messages
+                        })
                     })
                 })
             }
         })
     })
-    socket.on('getRooms', function () {
-        Room.read(function (err, rooms) {
+
+    socket.on('createMessage', function (data) {
+        console.log(data)
+        var newMessage = new Message({
+            content: data.content,
+            creator: data.creator,
+            _roomId: data._roomId
+        })
+        newMessage.save(function (err, message) {
             if (err) {
                 socket.emit('error', {
                     msg: err
                 })
             } else {
-                User.find({
-
-                })
-                socket.emit('roomsData', rooms)
+                socket.in(message._roomId).broadcast.emit('messageAdded', message)
+                socket.emit('messageAdded', message)
             }
         })
     })
+
 
     socket.on('disconnect', function () {
         if (!socket.user) {

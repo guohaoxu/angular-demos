@@ -3,9 +3,12 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
     $http({
         url: "/api/validate",
         method: "GET"
-    }).success(function (user) {
-        //$rootScope.me = user;
-        //$location.path("/rooms");
+    }).success(function (data) {
+        if (data.code === 1) {
+            $rootScope.me = data.msg;
+        } else {
+            $location.path("/login");
+        }
     }).error(function (data) {
         $location.path("/login");
     });
@@ -96,10 +99,16 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
         });
     }
 }).controller("RoomsCtrl", function ($scope, socket, $location) {
+    //房间列表页，接收房间信息 rooms {rooms, usersLen}
     socket.emit("getRooms");
-    socket.on("roomsData", function (rooms) {
-        $scope.rooms = $scope._rooms = rooms
+    socket.on("roomsData", function (data) {
+        console.log(data);
+        $scope.rooms = $scope._rooms = data.rooms;
+        $scope.rooms.forEach(function (room, index) {
+            room.length = data.usersLen[index]
+        });
     });
+    //搜索房间
     $scope.searchRoom = function () {
         if ($scope.searchKey) {
             $scope.rooms = $scope._rooms.filter(function (room) {
@@ -109,15 +118,18 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
             $scope.rooms = $scope._rooms;
         }
     };
+    //创建房间
     $scope.createRoom = function () {
         socket.emit("createRoom", {
             name: $scope.searchKey
         });
     };
     socket.on("roomAdded", function (room) {
+        room.length = 0;
         $scope._rooms.push(room);
         $scope.searchRoom();
     });
+    //进入房间
     $scope.enterRoom = function (room) {
         socket.emit("joinRoom", {
             user: $scope.me,
@@ -127,6 +139,8 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
     socket.on("joinRoom." + $scope.me._id, function (join) {
         $location.path("/rooms/" + join.room._id);
     });
+
+    //别人进入房间 跟新rooms
     socket.on("joinRoom", function (join) {
 //        $scope.rooms.forEach(function (room) {
 //            if (room._id == join.room._id) {
@@ -137,27 +151,25 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
 //        });
     });
 
-
     socket.on("error", function (msg) {
         console.log(msg);
     });
 
 }).controller("RoomCtrl", function ($scope, socket, $routeParams) {
-    console.log("route: " + $routeParams.roomId);
-
-    //获取当前房间信息 room.name  room.users  room.messages
+    //获取当前房间信息 roomData {room,users,messages}
     socket.emit("getCurRoom", {
         roomId: $routeParams.roomId
     });
-    socket.on("curRoomData", function (room) {
-        $scope.room = room;
+    socket.on("curRoomData", function (data) {
+        $scope.roomData = data;
     });
 
+    //接收新信息
     socket.on("messageAdded", function (message) {
-        $scope.room.messages.push(message);
+        $scope.roomData.messages.push(message);
     });
     socket.on("joinRoom", function (join) {
-        $scope.room.users.push(join.user);
+        $scope.roomData.users.push(join.user);
     })
     socket.on("online", function (user) {
         var _userId = user._id;
@@ -181,6 +193,7 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
     })
 
 }).controller("MessageCreatorCtrl", function ($scope, socket) {
+    console.log($scope.me)
     $scope.newMessage = "";
     $scope.createMessage = function () {
         if ($scope.newMessage === "") {
@@ -189,11 +202,24 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
         socket.emit("createMessage", {
             content: $scope.newMessage,
             creator: $scope.me,
-            _roomId: $scope.room._id
+            _roomId: $scope.roomData.room._id
         });
         $scope.newMessage = "";
     }
-}).controller("LoginCtrl", function ($scope, $http, $location) {
+}).controller("LoginCtrl", function ($scope, $http, $location, $rootScope) {
+    $http({
+        url: "/api/validate",
+        method: "GET"
+    }).success(function (data) {
+        if (data.code === 1) {
+            $rootScope.me = data.msg;
+            $location.path("/rooms");
+        } else {
+            $location.path("/login");
+        }
+    }).error(function (data) {
+        $location.path("/login");
+    });
     $scope.login = function () {
         $http({
             url: "/api/login",

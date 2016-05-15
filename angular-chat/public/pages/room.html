@@ -1,9 +1,9 @@
 <div class="col-sm-9">
     <div class="panel panel-default room">
-        <div class="panel-heading room-header">{{room.name}}</div>
+        <div class="panel-heading room-header"><b>房间： {{roomData.room.name}}</b></div>
         <div class="panel-body room-content">
             <div class="list-group messages" auto-scroll-to-bottom>
-                <div class="list-group-item message" ng-repeat="message in room.messages track by $index">
+                <div class="list-group-item message" ng-repeat="message in roomData.messages track by $index">
                     <img ng-src="{{message.creator.avatarUrl}}" class="img-rounded wid35">
                     <b>{{message.creator.name}}:</b> {{message.content}}
                     <time am-time-ago="message.createAt"></time>
@@ -22,7 +22,7 @@
         <div class="panel-heading user-list-header">在线用户</div>
         <div class="panel-body user-list-content">
             <div class="list-group users">
-                <div class="list-group-item user" ng-repeat="user in room.users">
+                <div class="list-group-item user" ng-repeat="user in roomData.users">
                     <img src="{{user.avatarUrl}}" title="{{user.name}}" class="img-rounded wid35">
                     {{user.name}}
                 </div>

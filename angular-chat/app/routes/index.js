@@ -8,15 +8,22 @@ module.exports = function (app) {
         if (_userId) {
             User.findUserById(_userId, function (err, user) {
                 if (err) {
-                    res.json(401, {
+                    res.json({
+                        code: 0,
                         msg: err
                     })
                 } else {
-                    res.json(user)
+                    res.json({
+                        code: 1,
+                        msg: user
+                    })
                 }
             })
         } else {
-            res.json(401, null)
+            res.json({
+                code: 0,
+                msg: err
+            })
         }
     })
 
