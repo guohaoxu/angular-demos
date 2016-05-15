@@ -130,25 +130,6 @@ io.on('connection', function (socket) {
             }
         })
     })
-    socket.on('disconnect', function () {
-        if (!socket.user) {
-            return
-        }
-        User.offline(socket.user._id, function (err, user) {
-            if (err) {
-                socket.emit('error', {
-                    msg: err
-                })
-            } else {
-                socket.broadcast.emit('offline', user)
-                socket.broadcast.emit('messageAdded', {
-                    content: user.name + '离开了聊天室',
-                    creator: SYSTEM,
-                    createAt: new Date()
-                })
-            }
-        })
-    })
 
     socket.on('createRoom', function (room) {
         var newRoom = new Room(room)
@@ -161,29 +142,6 @@ io.on('connection', function (socket) {
                 io.emit('roomAdded', room)
             }
         })
-    })
-    socket.on('getCurRoom', function (data) {
-        if (data && data.roomId) {
-            Room.findById(data._roomId, function (err, room) {
-                if (err) {
-                    socket.emit('error', {
-                        msg: err
-                    })
-                } else {
-                    socket.emit('roomData.' + data._roomId, room)
-                }
-            })
-        } else {
-            Room.read(function (err, rooms) {
-                if (err) {
-                    socket.emit('error', {
-                        msg: err
-                    })
-                } else {
-                    socket.emit('roomsData', rooms)
-                }
-            })
-        }
     })
     socket.on('joinRoom', function (join) {
         User.joinRoom(join, function (err, user) {
@@ -204,7 +162,64 @@ io.on('connection', function (socket) {
             }
         })
     })
+    socket.on('getCurRoom', function (data) {
+        Room.findById(data._roomId, function (err, room) {
+            if (err) {
+                socket.emit('error', {
+                    msg: err
+                })
+            } else {
+                console.log(util.inspect(room))
+                User.find({
+                    _roomId: room._id
+                }, function (err, users) {
+                    if (err) return
+                    room.users = users
+                    Message.find({
+                        _roomId: room._id
+                    }, function (err, messages) {
+                        if (err) return
+                        room.messages = messages
+                        socket.emit('curRoomData', room)
+                    })
+                })
+            }
+        })
+    })
+    socket.on('getRooms', function () {
+        Room.read(function (err, rooms) {
+            if (err) {
+                socket.emit('error', {
+                    msg: err
+                })
+            } else {
+                User.find({
 
+                })
+                socket.emit('roomsData', rooms)
+            }
+        })
+    })
+
+    socket.on('disconnect', function () {
+        if (!socket.user) {
+            return
+        }
+        User.offline(socket.user._id, function (err, user) {
+            if (err) {
+                socket.emit('error', {
+                    msg: err
+                })
+            } else {
+                socket.broadcast.emit('offline', user)
+                socket.broadcast.emit('messageAdded', {
+                    content: user.name + '离开了聊天室',
+                    creator: SYSTEM,
+                    createAt: new Date()
+                })
+            }
+        })
+    })
     socket.on('error', function (msg) {
         console.log('cao...')
     })

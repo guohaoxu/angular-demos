@@ -96,7 +96,7 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
         });
     }
 }).controller("RoomsCtrl", function ($scope, socket, $location) {
-    socket.emit("getAllRooms");
+    socket.emit("getRooms");
     socket.on("roomsData", function (rooms) {
         $scope.rooms = $scope._rooms = rooms
     });
@@ -149,7 +149,7 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
     socket.emit("getCurRoom", {
         roomId: $routeParams.roomId
     });
-    socket.on("curRoomData." + $routeParams.roomId, function (room) {
+    socket.on("curRoomData", function (room) {
         $scope.room = room;
     });
 
