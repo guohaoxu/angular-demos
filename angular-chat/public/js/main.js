@@ -1,5 +1,6 @@
 angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $rootScope, $http, $location) {
     $window.moment.locale("zh-cn");
+
     $http({
         url: "/api/validate",
         method: "GET"
@@ -12,6 +13,7 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
     }).error(function (data) {
         $location.path("/login");
     });
+
     $rootScope.logout = function () {
         $http({
             url: "/api/logout",
@@ -21,9 +23,10 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
             $location.path("/login");
         });
     };
+
     $rootScope.$on("login", function (event, me) {
         $rootScope.me = me;
-    })
+    });
 }).config(function ($routeProvider, $locationProvider) {
     $locationProvider.html5Mode(true);
 
@@ -100,7 +103,9 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
     }
 }).controller("RoomsCtrl", function ($scope, socket, $location) {
     //房间列表页，接收房间信息 rooms {rooms, usersLen}
-    socket.emit("getRooms");
+    socket.emit("getRooms", {
+        _userId: $scope.me._id
+    });
     socket.on("roomsData", function (data) {
         $scope.rooms = $scope._rooms = data.rooms;
         $scope.rooms.forEach(function (room, index) {
@@ -154,10 +159,10 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
 }).controller("RoomCtrl", function ($scope, socket, $routeParams) {
     //获取当前房间信息 roomData {room,users,messages}
     socket.emit("getCurRoom", {
-        roomId: $routeParams.roomId
+        roomId: $routeParams.roomId,
+        _userId: $scope.me._id
     });
     socket.on("curRoomData", function (data) {
-        console.log('bbbbbbbbbbbbbbbbbbbbbbbbb');
         $scope.roomData = data;
 
         //接收新信息
@@ -165,7 +170,6 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
             $scope.roomData.messages.push(message);
         });
         socket.on("joinRoom", function (join) {
-            console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
             $scope.roomData.users.push(join.user);
         });
     });

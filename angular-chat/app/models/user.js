@@ -59,6 +59,13 @@ userSchema.statics.joinRoom = function (join, cb) {
         _roomId: join.room._id
     }, cb)
 }
+userSchema.statics.leaveRoom = function (data, cb) {
+    this.findOneAndUpdate({
+        _id: data.serId
+    }, {
+        _roomId: null
+    }, cb)
+}
 
 var User = mongoose.model('User', userSchema)
 

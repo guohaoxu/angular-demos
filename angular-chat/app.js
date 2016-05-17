@@ -76,47 +76,10 @@ io.on('connection', function (socket) {
     var SYSTEM = {
         name: 'SYSTEM',
         avatarUrl: '/imgs/tx.jpg'
-    }
-//    socket.on("getRoom", function (_roomId) {
-//        socket.user = user
-//        User.online(user._id, function (err, user) {
-//            if (err) {
-//                socket.emit('error', {
-//                    msg: err
-//                })
-//            } else {
-//                socket.broadcast.emit('online', user)
-//                socket.broadcast.emit('messageAdded', {
-//                    content: user.name + '进入了聊天室',
-//                    creator: SYSTEM,
-//                    createAt: new Date()
-//                })
-//            }
-//            User.getOnlineUsers(function (err, users) {
-//                if (err) {
-//                    socket.emit('error', {
-//                        msg: err
-//                    })
-//                } else {
-//                    Message.read(function (err, messages) {
-//                        if (err) {
-//                            socket.emit('error', {
-//                                msg: err
-//                            })
-//                        } else {
-//                            socket.emit('roomData', {
-//                                users: users,
-//                                messages: messages
-//                            })
-//                        }
-//                    })
-//                }
-//            })
-//        })
-//    })
+    }, _userId
 
-
-    socket.on('getRooms', function () {
+    socket.on('getRooms', function (data) {
+        _userId = data._userId
         var _usersLen = []
         Room.read(function (err, rooms) {
             if (err) {
@@ -168,7 +131,6 @@ io.on('connection', function (socket) {
                 })
             } else {
                 socket.join(join.room._id)
-                console.log(util.inspect(join))
                 socket.broadcast.in(join.room._id).emit('joinRoom', join)
                 socket.broadcast.in(join.room._id).emit('messageAdded', {
                     content: join.user.name + '进入了聊天室',
@@ -181,6 +143,7 @@ io.on('connection', function (socket) {
         })
     })
     socket.on('getCurRoom', function (data) {
+        _userId = data._userId
         var _users = [],
             _messages = []
         Room.findById(data.roomId, function (err, room) {
@@ -230,21 +193,21 @@ io.on('connection', function (socket) {
 
 
     socket.on('disconnect', function () {
-        if (!socket.user) {
-            return
-        }
-        User.offline(socket.user._id, function (err, user) {
+        User.offline(_userId, function (err, user) {
             if (err) {
                 socket.emit('error', {
                     msg: err
                 })
             } else {
-                socket.broadcast.emit('offline', user)
-                socket.broadcast.emit('messageAdded', {
+                socket.broadcast.in(user._roomId).emit('offline', user)
+                socket.broadcast.in(user._roomId).emit('messageAdded', {
                     content: user.name + '离开了聊天室',
                     creator: SYSTEM,
                     createAt: new Date()
                 })
+                User.leaveRoom({
+                    userId: user._id
+                }, function () {})
             }
         })
     })
