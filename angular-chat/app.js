@@ -164,7 +164,7 @@ io.on('connection', function (socket) {
         User.joinRoom(join, function (err, user) {
             if (err) {
                 socket.emit('error', {
-                    msg: error
+                    msg: err
                 })
             } else {
                 socket.join(join.room._id)
@@ -210,7 +210,6 @@ io.on('connection', function (socket) {
     })
 
     socket.on('createMessage', function (data) {
-        console.log(data)
         var newMessage = new Message({
             content: data.content,
             creator: data.creator,

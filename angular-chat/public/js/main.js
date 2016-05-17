@@ -152,22 +152,25 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
     });
 
 }).controller("RoomCtrl", function ($scope, socket, $routeParams) {
+    console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
     //获取当前房间信息 roomData {room,users,messages}
     socket.emit("getCurRoom", {
         roomId: $routeParams.roomId
     });
     socket.on("curRoomData", function (data) {
+        console.log('bbbbbbbbbbbbbbbbbbbbbbbbb');
         $scope.roomData = data;
+
+        //接收新信息
+        socket.on("messageAdded", function (message) {
+            $scope.roomData.messages.push(message);
+        });
+        socket.on("joinRoom", function (join) {
+            $scope.roomData.users.push(join.user);
+        });
     });
 
-    //接收新信息
-    socket.on("messageAdded", function (message) {
-        $scope.roomData.messages.push(message);
-    });
-    socket.on("joinRoom", function (join) {
-        console.log($scope.roomData);
-        $scope.roomData.users.push(join.user);
-    })
+
 //    socket.on("online", function (user) {
 //        var _userId = user._id;
 //        if ($scope.room.users.some(function (user, index) {
@@ -187,7 +190,7 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
 //    })
     socket.on("error", function (data) {
         console.log(data);
-    })
+    });
 
 }).controller("MessageCreatorCtrl", function ($scope, socket) {
     $scope.newMessage = "";
