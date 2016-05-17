@@ -152,7 +152,6 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
     });
 
 }).controller("RoomCtrl", function ($scope, socket, $routeParams) {
-    console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
     //获取当前房间信息 roomData {room,users,messages}
     socket.emit("getCurRoom", {
         roomId: $routeParams.roomId
@@ -166,6 +165,7 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
             $scope.roomData.messages.push(message);
         });
         socket.on("joinRoom", function (join) {
+            console.log('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
             $scope.roomData.users.push(join.user);
         });
     });

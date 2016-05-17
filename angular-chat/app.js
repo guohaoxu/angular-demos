@@ -168,14 +168,15 @@ io.on('connection', function (socket) {
                 })
             } else {
                 socket.join(join.room._id)
-                socket.emit('joinRoom.' + join.user._id, join)
-                socket.emit('joinRoom', join)
-                socket.in(join.room._id).broadcast.emit('joinRoom', join)
-                socket.in(join.room._id).broadcast.emit('messageAdded', {
+                console.log(util.inspect(join))
+                socket.broadcast.in(join.room._id).emit('joinRoom', join)
+                socket.broadcast.in(join.room._id).emit('messageAdded', {
                     content: join.user.name + '进入了聊天室',
                     creator: SYSTEM,
                     createAt: new Date()
                 })
+                socket.emit('joinRoom.' + join.user._id, join)
+                socket.emit('joinRoom', join)
             }
         })
     })
