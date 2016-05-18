@@ -74,7 +74,7 @@ angular.module("myApp", ["ngRoute", "angularMoment"]).run(function ($window, $ro
                 function () {
                     element.animate({
                         scrollTop: element.prop("scrollHeight")
-                    }, 100);
+                    }, 500);
                 }
             );
         }
